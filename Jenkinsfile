@@ -1,4 +1,3 @@
-@"
 pipeline {
     agent any
 
@@ -8,25 +7,21 @@ pipeline {
 
     environment {
         APP_NAME = 'my-java-app'
-        BUILD_VERSION = "1.0.\${BUILD_NUMBER}"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo '========== STAGE 1: Checkout =========='
+                echo 'STAGE 1: Checkout'
                 checkout scm
-                echo 'Code checkout completed successfully!'
             }
         }
 
         stage('Build') {
             steps {
-                echo '========== STAGE 2: Build =========='
-                echo "Building \${APP_NAME} version \${BUILD_VERSION}..."
-                sh 'mvn clean package -DskipTests'
-                echo 'Build completed successfully!'
+                echo 'STAGE 2: Build'
+                bat 'mvn clean package -DskipTests'
             }
             post {
                 failure {
@@ -37,17 +32,15 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo '========== STAGE 3: Test =========='
-                echo 'Running unit tests...'
-                sh 'mvn test'
-                echo 'All tests passed!'
+                echo 'STAGE 3: Test'
+                bat 'mvn test'
             }
             post {
                 always {
                     junit '**/target/surefire-reports/*.xml'
                 }
                 failure {
-                    echo 'TESTS FAILED! Check test reports.'
+                    echo 'TESTS FAILED!'
                 }
             }
         }
@@ -59,12 +52,9 @@ pipeline {
                 }
             }
             steps {
-                echo '========== STAGE 4: Deploy =========='
-                echo "Deploying \${APP_NAME} version \${BUILD_VERSION}..."
+                echo 'STAGE 4: Deploy'
                 echo 'Simulating deployment to staging server...'
-                sh 'echo Deployment successful to STAGING environment'
-                sh 'ls target/*.jar'
-                echo 'Deployment simulation completed!'
+                bat 'echo Deployment successful!'
             }
             post {
                 failure {
@@ -76,29 +66,15 @@ pipeline {
 
     post {
         always {
-            echo '========== Archiving Artifacts =========='
             archiveArtifacts artifacts: 'target/*.jar',
                              fingerprint: true,
                              allowEmptyArchive: true
         }
         success {
-            echo '========================================='
             echo 'PIPELINE SUCCEEDED!'
-            echo 'All stages completed successfully.'
-            echo '========================================='
         }
         failure {
-            echo '========================================='
             echo 'PIPELINE FAILED!'
-            echo 'Check console output for details.'
-            echo '========================================='
-        }
-        unstable {
-            echo 'Pipeline is UNSTABLE - Some tests may have failed.'
-        }
-        aborted {
-            echo 'Pipeline was ABORTED manually.'
         }
     }
 }
-"@ | Set-Content Jenkinsfile
